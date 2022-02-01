@@ -1,10 +1,16 @@
 package io.github.taylsonmartinez.entity;
 
+import javax.persistence.*;
 import java.math.BigDecimal;
 
+@Entity
 public class Produto {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "id")
     private Integer id;
+
     private String descricao;
     private BigDecimal preco;
 
