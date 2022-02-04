@@ -6,6 +6,8 @@ import io.github.taylsonmartinez.entity.Cliente;
 import io.github.taylsonmartinez.entity.ItemPedido;
 import io.github.taylsonmartinez.entity.Pedido;
 import io.github.taylsonmartinez.entity.Produto;
+import io.github.taylsonmartinez.enums.StatusPedido;
+import io.github.taylsonmartinez.exception.PedidoNaoEncontradoException;
 import io.github.taylsonmartinez.exception.RegraNegocioException;
 import io.github.taylsonmartinez.repository.ClientesRepository;
 import io.github.taylsonmartinez.repository.ItemPedidoRepository;
@@ -18,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,6 +44,7 @@ public class PedidoServiceImpl implements PedidoService {
         pedido.setTotal(dto.getTotal());
         pedido.setDataPedido(LocalDate.now());
         pedido.setCliente(cliente);
+        pedido.setStatus(StatusPedido.REALIZADO);
 
         List<ItemPedido> itemsPedido = converterItems(pedido, dto.getItems());
         repository.save(pedido);
@@ -72,5 +76,21 @@ public class PedidoServiceImpl implements PedidoService {
                     return itemPedido;
                 }).collect(Collectors.toList());
 
+    }
+
+    @Override
+    public Optional<Pedido> obterPedidoCompleto(Integer id) {
+        return repository.findByIdFetchItens(id);
+    }
+
+    @Override
+    @Transactional
+    public void atualizaStatus( Integer id, StatusPedido statusPedido ) {
+        repository
+                .findById(id)
+                .map( pedido -> {
+                    pedido.setStatus(statusPedido);
+                    return repository.save(pedido);
+                }).orElseThrow(() -> new PedidoNaoEncontradoException() );
     }
 }
